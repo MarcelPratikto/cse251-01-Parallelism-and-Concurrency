@@ -160,9 +160,18 @@ def main():
     board.display()
 
     start = time.perf_counter()
-    for word in words:
-        if not board.find_word(word):
-            print(f'Error: Could not find "{word}"')
+    results = None
+
+    with mp.Pool(len(words)) as p:
+        results = p.map(board.find_word, words)
+
+    for i, r in enumerate(results):
+        if not r:
+            print(f'Error: Could not find {words[i]}')
+
+    # for word in words:
+    #     if not board.find_word(word):
+    #         print(f'Error: Could not find "{word}"')
     
     total_time = time.perf_counter() - start
 
