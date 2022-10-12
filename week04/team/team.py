@@ -12,6 +12,7 @@ Instructions:
 
 """
 
+from multiprocessing import Semaphore
 import threading
 import queue
 import requests
@@ -53,7 +54,10 @@ def main():
     log = Log(show_terminal=True)
 
     # TODO create queue
+    data_queue = queue.Queue()
+
     # TODO create semaphore (if needed)
+    num_in_queue_sem = Semaphore(0)
 
     # TODO create the threads. 1 filereader() and RETRIEVE_THREADS retrieve_thread()s
     # Pass any arguments to these thread need to do their job
