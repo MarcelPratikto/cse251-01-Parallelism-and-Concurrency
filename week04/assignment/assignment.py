@@ -125,8 +125,9 @@ class Dealer(threading.Thread):
                 self.sem_factory.release()
                 car = self.queue.get()
                 if car == "nocars":
-                    pass
-                print(f"car: {car.make} {car.model} {car.year}")
+                    return
+                else:
+                    print(f"car: {car.make} {car.model} {car.year}")
                 self.sem_dealer.acquire()
 
             # Sleep a little after selling a car
