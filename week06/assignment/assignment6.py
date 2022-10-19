@@ -180,22 +180,29 @@ def main():
     log.write(f'settings["wrapper-delay"]   = {settings[WRAPPER_DELAY]}')
 
     # TODO: create Pipes between creator -> bagger -> assembler -> wrapper
+    creator_parent, creator_child = mp.Pipe()
+    bagger_parent, bagger_child = mp.Pipe()
+    assembler_parent, assembler_child = mp.Pipe()
+    wrapper_parent, wrapper_child = mp.Pipe()
 
     # TODO create variable to be used to count the number of gifts
+    num_gifts = 0
 
     # delete final boxes file
     if os.path.exists(BOXES_FILENAME):
         os.remove(BOXES_FILENAME)
 
     log.write('Create the processes')
-
     # TODO Create the processes (ie., classes above)
+
 
     log.write('Starting the processes')
     # TODO add code here
 
+
     log.write('Waiting for processes to finish')
     # TODO add code here
+    
 
     display_final_boxes(BOXES_FILENAME, log)
 
