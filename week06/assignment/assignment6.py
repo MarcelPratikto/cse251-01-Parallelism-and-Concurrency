@@ -98,7 +98,7 @@ class Marble_Creator(mp.Process):
         Let the bagger know there are no more marbles
         '''
         for _ in range(self.marble_count):
-            marble = random.choice(Marble_Creator.colors)
+            marble = random.choice(self.colors)
             #send to bagger
             self.creator_parent.send(marble)
             time.sleep(self.creator_delay)
@@ -126,15 +126,16 @@ class Bagger(mp.Process):
             sleep the required amount
         tell the assembler that there are no more bags
         '''
-        bag_of_marbles = []
+        bag_of_marbles = Bag()
         marble = self.creator_child.recv()
         while marble != END_MESSAGE:
-            if len(bag_of_marbles) < self.bag_count:
-                bag_of_marbles.append(marble)
-            marble = self.creator_child.recv()
-        # send bag to assembler
-        self.bagger_parent.send(bag_of_marbles)
-        time.sleep(self.bagger_delay)
+            while bag_of_marbles.get_size() < self.bag_count:
+                bag_of_marbles.add(marble)
+                marble = self.creator_child.recv()
+            # send bag to assembler
+            self.bagger_parent.send(bag_of_marbles)
+            bag_of_marbles = Bag()   
+            time.sleep(self.bagger_delay)
         self.bagger_parent.send(END_MESSAGE)
         self.bagger_parent.close()
 
@@ -163,8 +164,8 @@ class Assembler(mp.Process):
         while bag_marbles != END_MESSAGE:
             gift = Gift(random.choice(Assembler.marble_names), bag_marbles)
             self.assembler_parent.send(gift)
-            time.sleep(self.assembler_delay)
             bag_marbles = self.bagger_child.recv()
+            time.sleep(self.assembler_delay)
         self.assembler_parent.send(END_MESSAGE)
         self.assembler_parent.close()
         
@@ -187,13 +188,16 @@ class Wrapper(mp.Process):
         '''
         with open(BOXES_FILENAME, "w") as boxes_file:
             gift = self.assembler_child.recv()
+            i = 0
             while gift != END_MESSAGE:
                 boxes_file.write(
-                    f"Created - {datetime.now().time()}: Large marble: {gift.large_marble}, marbles: {gift.marbles}"
+                    f"[{i}] Created - {datetime.now().time()}: Large marble: {gift.large_marble},\t\tmarbles: {gift.marbles}\n"
                 )
+                print(f"[{i}] Created - {datetime.now().time()}: Large marble: {gift.large_marble},\t\tmarbles: {gift.marbles}")
+                i += 1
                 self.num_gifts += 1
-                time.sleep(self.wrapper_delay)
                 gift = self.assembler_child.recv()
+                time.sleep(self.wrapper_delay)
 
 
 def display_final_boxes(filename, log):
@@ -241,6 +245,7 @@ def main():
     #wrapper_parent, wrapper_child = mp.Pipe()
 
     # TODO create variable to be used to count the number of gifts
+    #num_gifts = mp.Value('i', 0)
     num_gifts = 0
 
     # delete final boxes file
