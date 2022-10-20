@@ -2,7 +2,7 @@
 Course: CSE 251
 Lesson Week: 06
 File: assignment.py
-Author: <Your name here>
+Author: Marcel Pratikto
 Purpose: Processing Plant
 Instructions:
 - Implement the classes to allow gifts to be created.
@@ -82,10 +82,12 @@ class Marble_Creator(mp.Process):
         'Brown', 'Gold', 'Blue-Green', 'Antique Bronze', 'Mint Green', 'Royal Blue', 
         'Light Orange', 'Pastel Blue', 'Middle Green')
 
-    def __init__(self, creator_parent):
+    def __init__(self, creator_parent, marble_count, creator_delay):
         mp.Process.__init__(self)
         # TODO Add any arguments and variables here
         self.creator_parent = creator_parent
+        self.marble_count = marble_count
+        self.creator_delay = creator_delay
 
     def run(self):
         '''
@@ -95,11 +97,11 @@ class Marble_Creator(mp.Process):
             sleep the required amount
         Let the bagger know there are no more marbles
         '''
-        for _ in range(MARBLE_COUNT):
+        for _ in range(self.marble_count):
             marble = random.choice(Marble_Creator.colors)
             #send to bagger
             self.creator_parent.send(marble)
-            time.sleep(CREATOR_DELAY)
+            time.sleep(self.creator_delay)
         #let bagger know there are no more marbles
         self.creator_parent.send(END_MESSAGE)
         self.creator_parent.close()
@@ -108,11 +110,13 @@ class Marble_Creator(mp.Process):
 class Bagger(mp.Process):
     """ Receives marbles from the marble creator, then there are enough
         marbles, the bag of marbles are sent to the assembler """
-    def __init__(self, creator_child, bagger_parent):
+    def __init__(self, creator_child, bagger_parent, bag_count, bagger_delay):
         mp.Process.__init__(self)
         # TODO Add any arguments and variables here
         self.creator_child = creator_child
         self.bagger_parent = bagger_parent
+        self.bag_count = bag_count
+        self.bagger_delay = bagger_delay
 
     def run(self):
         '''
@@ -125,12 +129,12 @@ class Bagger(mp.Process):
         bag_of_marbles = []
         marble = self.creator_child.recv()
         while marble != END_MESSAGE:
-            if len(bag_of_marbles) < BAG_COUNT:
+            if len(bag_of_marbles) < self.bag_count:
                 bag_of_marbles.append(marble)
             marble = self.creator_child.recv()
         # send bag to assembler
         self.bagger_parent.send(bag_of_marbles)
-        time.sleep(BAGGER_DELAY)
+        time.sleep(self.bagger_delay)
         self.bagger_parent.send(END_MESSAGE)
         self.bagger_parent.close()
 
@@ -140,11 +144,12 @@ class Assembler(mp.Process):
         Sends the completed gift to the wrapper """
     marble_names = ('Lucky', 'Spinner', 'Sure Shot', 'The Boss', 'Winner', '5-Star', 'Hercules', 'Apollo', 'Zeus')
 
-    def __init__(self, bagger_child, assembler_parent):
+    def __init__(self, bagger_child, assembler_parent, assembler_delay):
         mp.Process.__init__(self)
         # TODO Add any arguments and variables here
         self.bagger_child = bagger_child
         self.assembler_parent = assembler_parent
+        self.assembler_delay = assembler_delay
 
     def run(self):
         '''
@@ -158,7 +163,7 @@ class Assembler(mp.Process):
         while bag_marbles != END_MESSAGE:
             gift = Gift(random.choice(Assembler.marble_names), bag_marbles)
             self.assembler_parent.send(gift)
-            time.sleep(ASSEMBLER_DELAY)
+            time.sleep(self.assembler_delay)
             bag_marbles = self.bagger_child.recv()
         self.assembler_parent.send(END_MESSAGE)
         self.assembler_parent.close()
@@ -166,11 +171,12 @@ class Assembler(mp.Process):
 
 class Wrapper(mp.Process):
     """ Takes created gifts and wraps them by placing them in the boxes file """
-    def __init__(self, assembler_child, num_gifts):
+    def __init__(self, assembler_child, num_gifts, wrapper_delay):
         mp.Process.__init__(self)
         # TODO Add any arguments and variables here
         self.assembler_child = assembler_child
         self.num_gifts = num_gifts
+        self.wrapper_delay = wrapper_delay
 
     def run(self):
         '''
@@ -179,13 +185,14 @@ class Wrapper(mp.Process):
             save gift to the file with the current time
             sleep the required amount
         '''
-        with open(BOXES_FILENAME, "r") as boxes_file:
+        with open(BOXES_FILENAME, "w") as boxes_file:
             gift = self.assembler_child.recv()
             while gift != END_MESSAGE:
                 boxes_file.write(
                     f"Created - {datetime.now().time()}: Large marble: {gift.large_marble}, marbles: {gift.marbles}"
                 )
                 self.num_gifts += 1
+                time.sleep(self.wrapper_delay)
                 gift = self.assembler_child.recv()
 
 
@@ -213,6 +220,12 @@ def main():
     if settings == {}:
         log.write_error(f'Problem reading in settings file: {CONTROL_FILENAME}')
         return
+    marble_count = settings[MARBLE_COUNT]
+    creator_delay = settings[CREATOR_DELAY]
+    bag_count = settings[BAG_COUNT]
+    bagger_delay = settings[BAGGER_DELAY]
+    assembler_delay = settings[ASSEMBLER_DELAY]
+    wrapper_delay = settings[WRAPPER_DELAY]
 
     log.write(f'Marble count                = {settings[MARBLE_COUNT]}')
     log.write(f'settings["creator-delay"]   = {settings[CREATOR_DELAY]}')
@@ -236,10 +249,10 @@ def main():
 
     log.write('Create the processes')
     # TODO Create the processes (ie., classes above)
-    marble_creator = Marble_Creator(creator_parent)
-    bagger = Bagger(creator_child, bagger_parent)
-    assembler = Assembler(bagger_child, assembler_parent)
-    wrapper = Wrapper(assembler_child, num_gifts)
+    marble_creator = Marble_Creator(creator_parent, marble_count, creator_delay)
+    bagger = Bagger(creator_child, bagger_parent, bag_count, bagger_delay)
+    assembler = Assembler(bagger_child, assembler_parent, assembler_delay)
+    wrapper = Wrapper(assembler_child, num_gifts, wrapper_delay)
 
     log.write('Starting the processes')
     # TODO add code here
