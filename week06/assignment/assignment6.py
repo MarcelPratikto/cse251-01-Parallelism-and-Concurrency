@@ -185,10 +185,11 @@ class Assembler(mp.Process):
 
 class Wrapper(mp.Process):
     """ Takes created gifts and wraps them by placing them in the boxes file """
-    def __init__(self, assembler_child, num_gifts, wrapper_delay):
+    def __init__(self, assembler_child, wrapper_parent, num_gifts, wrapper_delay):
         mp.Process.__init__(self)
         # TODO Add any arguments and variables here
         self.assembler_child = assembler_child
+        self.wrapper_parent = wrapper_parent
         self.num_gifts = num_gifts
         self.wrapper_delay = wrapper_delay
 
@@ -204,13 +205,29 @@ class Wrapper(mp.Process):
             i = 0
             while gift != END_MESSAGE:
                 boxes_file.write(
-                    f"[{i:002}] Created - {datetime.now().time()}: Large marble: {gift.large_marble}, marbles: {gift.marbles}\n"
+                    f"[{i:03}] Created - {datetime.now().time()}: Large marble: {gift.large_marble}, marbles: {gift.marbles}\n"
                 )
                 #print(f"[{i}] Created - {datetime.now().time()}: Large marble: {gift.large_marble},\t\tmarbles: {gift.marbles}")
                 i += 1
-                self.num_gifts += 1
+                self.count_gifts()
                 gift = self.assembler_child.recv()
                 time.sleep(self.wrapper_delay)
+        self.send_num_gifts()
+    
+    def count_gifts(self):
+        # temp = self.num_gifts.value
+        # temp += 1
+        # self.num_gifts = mp.Value('i',temp)
+        self.num_gifts += 1
+        #print(f"increment num_gifts: {self.num_gifts}")
+    
+    def send_num_gifts(self):
+        # num_gifts = mp.Value('i', self.num_gifts)
+        # print(num_gifts)
+        # return num_gifts
+        print(f"num_gifts: {self.num_gifts}")
+        self.wrapper_parent.send(self.num_gifts)
+        self.wrapper_parent.close()
 
 
 def display_final_boxes(filename, log):
@@ -255,7 +272,7 @@ def main():
     creator_parent, creator_child = mp.Pipe()
     bagger_parent, bagger_child = mp.Pipe()
     assembler_parent, assembler_child = mp.Pipe()
-    #wrapper_parent, wrapper_child = mp.Pipe()
+    wrapper_parent, wrapper_child = mp.Pipe()
 
     # TODO create variable to be used to count the number of gifts
     #num_gifts = mp.Value('i', 0)
@@ -270,7 +287,7 @@ def main():
     marble_creator = Marble_Creator(creator_parent, marble_count, creator_delay)
     bagger = Bagger(creator_child, bagger_parent, bag_count, bagger_delay)
     assembler = Assembler(bagger_child, assembler_parent, assembler_delay)
-    wrapper = Wrapper(assembler_child, num_gifts, wrapper_delay)
+    wrapper = Wrapper(assembler_child, wrapper_parent, num_gifts, wrapper_delay)
 
     log.write('Starting the processes')
     # TODO add code here
@@ -289,6 +306,7 @@ def main():
     display_final_boxes(BOXES_FILENAME, log)
 
     # TODO Log the number of gifts created.
+    num_gifts = wrapper_child.recv()
     log.write(f"number of gifts created:    = {num_gifts}")
 
 
