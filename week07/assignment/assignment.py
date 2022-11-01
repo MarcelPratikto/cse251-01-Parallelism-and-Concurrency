@@ -2,14 +2,14 @@
 Course: CSE 251
 Lesson Week: 07
 File: assingnment.py
-Author: <Your name here>
+Author: Marcel Pratikto
 Purpose: Process Task Files
 
 Instructions:  See I-Learn
 
 TODO
 
-Add you comments here on the pool sizes that you used for your assignment and
+Add your comments here on the pool sizes that you used for your assignment and
 why they were the best choices.
 
 
@@ -62,7 +62,10 @@ def task_prime(value):
             - or -
         {value} is not prime
     """
-    pass
+    if is_prime(value):
+        result_primes.append(f"{value} is prime")
+    else:
+        result_primes.append(f"{value} is not prime")
 
 def task_word(word):
     """
@@ -72,7 +75,9 @@ def task_word(word):
             - or -
         {word} not found *****
     """
-    pass
+    file = open("words.txt", "r")
+    for word in file:
+        pass
 
 def task_upper(text):
     """
