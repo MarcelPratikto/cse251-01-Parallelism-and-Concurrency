@@ -8,6 +8,7 @@ Purpose: Process Task Files
 Instructions:  See I-Learn
 
 TODO
+I started with 4
 
 Add your comments here on the pool sizes that you used for your assignment and
 why they were the best choices.
@@ -75,23 +76,34 @@ def task_word(word):
             - or -
         {word} not found *****
     """
-    file = open("words.txt", "r")
-    for word in file:
-        pass
+    with open("words.txt", "r") as file: # auto closes without having to close()
+        file_content = file.readline()
+        word_found = False
+        for line in file_content:
+            if word == line:
+                word_found = True
+                break
+        if word_found:
+            result_words.append(f"{word} Found")
+        else:
+            result_words.append(f"{word} not found *****")
 
 def task_upper(text):
     """
     Add the following to the global list:
         {text} ==>  uppercase version of {text}
     """
-    pass
+    result_upper.append(text.upper())
 
 def task_sum(start_value, end_value):
     """
     Add the following to the global list:
         sum of {start_value:,} to {end_value:,} = {total:,}
     """
-    pass
+    total = 0
+    for i in range(start_value, end_value+1):
+        total += i
+    result_sums.append(sum(total))
 
 def task_name(url):
     """
@@ -101,14 +113,19 @@ def task_name(url):
             - or -
         {url} had an error receiving the information
     """
-    pass
-
+    request = requests.get(url)
+    if request.ok:
+        result_names.append(f"{url} has name <{url.text}>")
 
 def main():
     log = Log(show_terminal=True)
     log.start_timer()
 
     # TODO Create process pools
+    # pools = []
+    # for i in range(4):
+    #     pools.append(mp.Pool)
+    pool = mp.Pool(4)
 
     count = 0
     task_files = glob.glob("*.task")
@@ -133,7 +150,8 @@ def main():
             log.write(f'Error: unknown task type {task_type}')
 
     # TODO start and wait pools
-
+    pool.close()
+    pool.join()
 
     # Do not change the following code (to the end of the main function)
     def log_list(lst, log):
