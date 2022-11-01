@@ -68,9 +68,9 @@ def task_prime(value):
         {value} is not prime
     """
     if is_prime(value):
-        result_primes.append(f"{value} is prime")
+        return f"{value} is prime"
     else:
-        result_primes.append(f"{value} is not prime")
+        return f"{value} is not prime"
 
 def task_word(word):
     """
@@ -86,18 +86,18 @@ def task_word(word):
         if word in file_content:
             word_found = True
         #print(f"file_content {file_content}")
-        print(f"word_found: {word_found}")
+        #print(f"word_found: {word_found}")
         if word_found:
-            result_words.append(f"{word} Found")
+            return f"{word} Found"
         else:
-            result_words.append(f"{word} not found *****")
+            return f"{word} not found *****"
 
 def task_upper(text):
     """
     Add the following to the global list:
         {text} ==>  uppercase version of {text}
     """
-    result_upper.append(f"{text.upper()} ==> uppercase version of {text}")
+    return f"{text.upper()} ==> uppercase version of {text}"
 
 def task_sum(start_value, end_value):
     """
@@ -107,7 +107,7 @@ def task_sum(start_value, end_value):
     total = 0
     for i in range(start_value, end_value+1):
         total += i
-    result_sums.append(total)
+    return total
 
 def task_name(url):
     """
@@ -119,20 +119,17 @@ def task_name(url):
     """
     request = requests.get(url)
     content = request.json()
-    print(f"content: {content}")
+    #print(f"content: {content}")
     name = content["name"]
     print(f"name: {name}")
     if request.ok:
-        result_names.append(f"{url} has name {name}")
+        return f"{url} has name {name}"
 
 def main():
     log = Log(show_terminal=True)
     log.start_timer()
 
     # TODO Create process pools
-    # pools = []
-    # for i in range(4):
-    #     pools.append(mp.Pool)
     pool = mp.Pool(4)
 
     count = 0
@@ -145,15 +142,20 @@ def main():
         count += 1
         task_type = task['task']
         if task_type == TYPE_PRIME:
-            task_prime(task['value'])
+            #task_prime(task['value'])
+            result_primes.append(pool.apply_async(task_prime, args=(task['value'],)).get())            
         elif task_type == TYPE_WORD:
-            task_word(task['word'])
+            #task_word(task['word'])
+            result_words.append(pool.apply_async(task_word, args=(task['word'],)).get())
         elif task_type == TYPE_UPPER:
-            task_upper(task['text'])
+            #task_upper(task['text'])
+            result_upper.append(pool.apply_async(task_upper, args=(task['text'],)).get())
         elif task_type == TYPE_SUM:
-            task_sum(task['start'], task['end'])
+            #task_sum(task['start'], task['end'])
+            result_sums.append(pool.apply_async(task_sum, args=(task['start'], task['end'])).get())            
         elif task_type == TYPE_NAME:
-            task_name(task['url'])
+            #task_name(task['url'])
+            result_names.append(pool.apply_async(task_name, args=(task['url'],)).get())            
         else:
             log.write(f'Error: unknown task type {task_type}')
 
