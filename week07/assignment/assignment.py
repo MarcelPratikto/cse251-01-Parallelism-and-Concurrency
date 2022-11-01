@@ -11,12 +11,14 @@ TODO
 Add your comments here on the pool sizes that you used for your assignment and
 why they were the best choices.
 
-TEST
-I started with 4:
-Then went to 8:
-Then 16: 
-Then 20:
+4034 Test Files
+I started with 4:   148.60744420 seconds
+Then went to 8:     146.74165900 seconds
+Then 16:            148.01337980 seconds
+Then 20:            146.04221650 seconds
 
+I think they are the best because of the number of cores that I have in my computer.
+I keep incrementing by 4 until I reach max cores.
 
 """
 
@@ -130,7 +132,7 @@ def main():
     log.start_timer()
 
     # TODO Create process pools
-    pool = mp.Pool(4)
+    pool = mp.Pool(20)
 
     count = 0
     task_files = glob.glob("*.task")
@@ -144,18 +146,23 @@ def main():
         if task_type == TYPE_PRIME:
             #task_prime(task['value'])
             result_primes.append(pool.apply_async(task_prime, args=(task['value'],)).get())            
+            #pool.apply_async(result_primes.append, args=(task_prime(task['value']),))
         elif task_type == TYPE_WORD:
             #task_word(task['word'])
             result_words.append(pool.apply_async(task_word, args=(task['word'],)).get())
+            #pool.apply_async(result_words.append, args=(task_word(task['word']),))
         elif task_type == TYPE_UPPER:
             #task_upper(task['text'])
             result_upper.append(pool.apply_async(task_upper, args=(task['text'],)).get())
+            #pool.apply_async(result_upper.append, args=(task_upper(task['text']),))
         elif task_type == TYPE_SUM:
             #task_sum(task['start'], task['end'])
-            result_sums.append(pool.apply_async(task_sum, args=(task['start'], task['end'])).get())            
+            result_sums.append(pool.apply_async(task_sum, args=(task['start'], task['end'])).get())
+            #pool.apply_async(result_sums.append, args=(task_sum(task['start'], task['end'])),)
         elif task_type == TYPE_NAME:
             #task_name(task['url'])
-            result_names.append(pool.apply_async(task_name, args=(task['url'],)).get())            
+            result_names.append(pool.apply_async(task_name, args=(task['url'],)).get())
+            #pool.apply_async(result_names.append, args=(task_name(task['url']),))         
         else:
             log.write(f'Error: unknown task type {task_type}')
 
