@@ -8,10 +8,14 @@ Purpose: Process Task Files
 Instructions:  See I-Learn
 
 TODO
-I started with 4
-
 Add your comments here on the pool sizes that you used for your assignment and
 why they were the best choices.
+
+TEST
+I started with 4:
+Then went to 8:
+Then 16: 
+Then 20:
 
 
 """
@@ -77,12 +81,12 @@ def task_word(word):
         {word} not found *****
     """
     with open("words.txt", "r") as file: # auto closes without having to close()
-        file_content = file.readline()
+        file_content = [line.rstrip() for line in file]
         word_found = False
-        for line in file_content:
-            if word == line:
-                word_found = True
-                break
+        if word in file_content:
+            word_found = True
+        #print(f"file_content {file_content}")
+        print(f"word_found: {word_found}")
         if word_found:
             result_words.append(f"{word} Found")
         else:
@@ -93,7 +97,7 @@ def task_upper(text):
     Add the following to the global list:
         {text} ==>  uppercase version of {text}
     """
-    result_upper.append(text.upper())
+    result_upper.append(f"{text.upper()} ==> uppercase version of {text}")
 
 def task_sum(start_value, end_value):
     """
@@ -103,7 +107,7 @@ def task_sum(start_value, end_value):
     total = 0
     for i in range(start_value, end_value+1):
         total += i
-    result_sums.append(sum(total))
+    result_sums.append(total)
 
 def task_name(url):
     """
@@ -114,8 +118,12 @@ def task_name(url):
         {url} had an error receiving the information
     """
     request = requests.get(url)
+    content = request.json()
+    print(f"content: {content}")
+    name = content["name"]
+    print(f"name: {name}")
     if request.ok:
-        result_names.append(f"{url} has name <{url.text}>")
+        result_names.append(f"{url} has name {name}")
 
 def main():
     log = Log(show_terminal=True)
