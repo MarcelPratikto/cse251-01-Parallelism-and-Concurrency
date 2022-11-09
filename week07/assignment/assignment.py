@@ -132,7 +132,11 @@ def main():
     log.start_timer()
 
     # TODO Create process pools
-    pool = mp.Pool(20)
+    pool_primes = mp.Pool(1)
+    pool_words = mp.Pool(1)
+    pool_upper = mp.Pool(1)
+    pool_sum = mp.Pool(1)
+    pool_url = mp.Pool(1)
 
     count = 0
     task_files = glob.glob("*.task")
