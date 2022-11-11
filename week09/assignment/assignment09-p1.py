@@ -25,13 +25,51 @@ COLOR = (0, 0, 255)
 
 
 # TODO add any functions
+def using_recursion(maze, path, coord):
+    x = coord[0]
+    y = coord[1]
+    maze.move(x,y,COLOR)
+    #print(f"moved to ({x},{y})")
+    path.append((x,y))
+    if maze.at_end(x, y):
+        #print("CONGRATS, YOU'VE REACHED THE END!!!")
+        return True
+    
+    possible_moves = maze.get_possible_moves(x,y)
+    if len(possible_moves) == 0:
+        maze.restore(x, y)
+        path.pop()
+        return False
+    # if there is possible moves, move there.
+    # if returned because it reached a dead end, call, maze.restore
+    for coordinate in possible_moves:
+        new_x = coordinate[0]
+        new_y = coordinate[1]
+        if maze.can_move_here(new_x,new_y):
+            end = using_recursion(maze, path, (new_x, new_y))
+            if end:
+                break
+            #print(f"end = {end}")
+    if not end:
+        maze.restore(x, y)
+        path.pop()
+        return False
+    else:
+        return True
+            
+    
 
 def solve_path(maze):
     """ Solve the maze and return the path found between the start and end positions.  
         The path is a list of positions, (x, y) """
-        
     # TODO start add code here
     path = []
+
+    coord_start = maze.get_start_pos()
+    #print(f"coord_start: {coord_start}")
+    using_recursion(maze, path, coord_start)
+    #print(f"path: {path}")
+
     return path
 
 
@@ -68,9 +106,13 @@ def get_path(log, filename):
 def find_paths(log):
     """ Do not change this function """
 
+    # TODO UNCOMMENT WHEN DONE TESTING
     files = ('verysmall.bmp', 'verysmall-loops.bmp', 
             'small.bmp', 'small-loops.bmp', 
             'small-odd.bmp', 'small-open.bmp', 'large.bmp', 'large-loops.bmp')
+    # TODO COMMENT WHEN DONE TESTING
+    # files = ('verysmall.bmp', 'verysmall-loops.bmp')
+    # files = ('verysmall.bmp', 'verysmall.bmp')
 
     log.write('*' * 40)
     log.write('Part 1')
