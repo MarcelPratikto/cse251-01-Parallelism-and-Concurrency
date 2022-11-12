@@ -26,6 +26,10 @@ COLOR = (0, 0, 255)
 
 # TODO add any functions
 def using_recursion(maze, path, coord):
+    # When given new coordinate, move there.
+    # Append new coordinates to path.
+    # If it's the right path that leads to the end, it will stay
+    # otherwise it will be removed by this function.
     x = coord[0]
     y = coord[1]
     maze.move(x,y,COLOR)
@@ -35,22 +39,29 @@ def using_recursion(maze, path, coord):
         #print("CONGRATS, YOU'VE REACHED THE END!!!")
         return True
     
+    # If there are no possible moves:
+    # maze.restore, pop from path, return False
+    # If there are possible moves, call this function again with the new coordinates
+    # Store the result from the recursive calls
+    # If end is not found:
+    # maze.restore, pop from path, return False
+    # If end is found:
+    # break out of the loop going through all the possible moves
+    # simply return True
     possible_moves = maze.get_possible_moves(x,y)
     if len(possible_moves) == 0:
         maze.restore(x, y)
         path.pop()
         return False
-    # if there is possible moves, move there.
-    # if returned because it reached a dead end, call, maze.restore
     for coordinate in possible_moves:
         new_x = coordinate[0]
         new_y = coordinate[1]
         if maze.can_move_here(new_x,new_y):
-            end = using_recursion(maze, path, (new_x, new_y))
-            if end:
+            end_found = using_recursion(maze, path, (new_x, new_y))
+            if end_found:
                 break
             #print(f"end = {end}")
-    if not end:
+    if not end_found:
         maze.restore(x, y)
         path.pop()
         return False
@@ -106,13 +117,9 @@ def get_path(log, filename):
 def find_paths(log):
     """ Do not change this function """
 
-    # TODO UNCOMMENT WHEN DONE TESTING
     files = ('verysmall.bmp', 'verysmall-loops.bmp', 
             'small.bmp', 'small-loops.bmp', 
             'small-odd.bmp', 'small-open.bmp', 'large.bmp', 'large-loops.bmp')
-    # TODO COMMENT WHEN DONE TESTING
-    # files = ('verysmall.bmp', 'verysmall-loops.bmp')
-    # files = ('verysmall.bmp', 'verysmall.bmp')
 
     log.write('*' * 40)
     log.write('Part 1')
