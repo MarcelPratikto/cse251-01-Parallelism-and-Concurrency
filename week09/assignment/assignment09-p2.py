@@ -2,7 +2,7 @@
 Course: CSE 251 
 Lesson Week: 09
 File: assignment09-p2.py 
-Author: <Add name here>
+Author: Marcel Pratikto
 
 Purpose: Part 2 of assignment 09, finding the end position in the maze
 

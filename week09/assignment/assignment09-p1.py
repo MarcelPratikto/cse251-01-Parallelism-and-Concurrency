@@ -2,7 +2,7 @@
 Course: CSE 251 
 Lesson Week: 09
 File: assignment09-p1.py 
-Author: <Add name here>
+Author: Marcel Pratikto
 
 Purpose: Part 1 of assignment 09, finding a path to the end position in a maze
 
