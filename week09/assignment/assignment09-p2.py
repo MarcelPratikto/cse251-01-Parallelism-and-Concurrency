@@ -72,39 +72,61 @@ def get_color():
     return color
 
 # TODO other functions required to complete solve_find_end
-def move_until_fork(maze, coord, color):
+def move_until_fork(lock,maze,coord,color,queue_coord,list_possible_moves):
     possible_moves = []
+    new_coord = coord
     while True:
-        x = coord[0]
-        y = coord[1]
+        x = new_coord[0]
+        y = new_coord[1]
         maze.move(x,y,color)
+        
         possible_moves = maze.get_possible_moves(x,y)
+        print(f"possible_moves: {possible_moves}")
         if len(possible_moves) == 1:
-            coord = possible_moves[0]
-        # elif len(possible_moves) > 1:
-        #     return coord
-        else:
+            new_coord = possible_moves[0]
+            if not maze.can_move_here(new_coord[0],new_coord[1]):
+                return
+        elif len(possible_moves) == 0:
             return
+        else:
+            lock.acquire()
+            queue_coord.append(coord)
+            list_possible_moves.append(possible_moves[1:])
+            lock.release()
+            coordinates = possible_moves[0]
+            move_until_fork(lock,maze,coordinates,color,queue_coord,list_possible_moves)
 
-def solve_using_threads_recursion(threads,maze,coord):
-    if len(threads) == 0:
-        curr_thread = threading.Thread(target=move_until_fork,args=(maze,coord,get_color()))
-        threads.append(curr_thread)
-        thread_count += 1 # to keep track of how many threads used?
-        curr_thread.start()
+def solve_using_threads_recursion(threads,lock,maze,coord,queue_coord,list_possible_moves):
+    new_color = get_color()
+    new_thread = threading.Thread(target=move_until_fork,args=(lock,maze,coord,new_color,queue_coord,list_possible_moves))
+    threads.append(new_thread)
+    new_thread.start()
+    print(f"started new_thread {new_color}")
+ 
+    print(f"queue_coord: {queue_coord}")
+    if maze.at_end(queue_coord[-1]):
+        for thread in threads:
+            thread.join()
+        return
+    
+    for coordinates in list_possible_moves[-1]:
+        solve_using_threads_recursion(threads,lock,maze,coordinates,queue_coord,list_possible_moves)
 
-        curr_thread.join()
-    else:
-        pass
 
 # TODO the function to solve
 def solve_find_end(maze):
     """ finds the end position using threads.  Nothing is returned """
     start_coord = maze.get_start_pos()
     threads = []
+    lock = threading.Lock()
+    queue_coord = []
+    list_possible_moves = []
 
     # When one of the threads finds the end position, stop all of them
-    pass
+    solve_using_threads_recursion(threads,lock,maze,start_coord,queue_coord,list_possible_moves)
+
+    global thread_count
+    thread_count = len(threads)
 
 
 def find_end(log, filename, delay):
