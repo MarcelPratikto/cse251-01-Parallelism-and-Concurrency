@@ -18,12 +18,18 @@ change the program to display the found path to the exit position.
 
 What would be your strategy?  
 
-<Answer here>
+I would add another parameter to the recursive function
+that stores the coordinates that the thread has gone through.
+I would also add a boolean return value for the recursive function.
+If the function returns True, keep the stored coordinates.
+If not, pop the coordinates.
 
 
 Why would it work?
 
-<Answer here>
+It would work because the parameter that stores the path
+would only keep the coordinates that leads to the end.
+It might not be in order, but that is an issue for another day.
 
 """
 import math
@@ -82,13 +88,18 @@ that thread needs to stop all other threads.
 Recursion is required for this part of the assignment.
 """
 def solve_using_threads_recursion(maze, coord, color, threads):
+    global stop
+    
     # start maze at the coordinate given
     x,y = coord
-    maze.move(x,y,color)
+    if maze.can_move_here(x,y):
+        maze.move(x,y,color)
+    else:
+        return
     # When end position is found,
     # this thread needs to stop all other threads
     if maze.at_end(x,y):
-        global stop
+        # global stop
         stop = True
         return
 
@@ -97,6 +108,9 @@ def solve_using_threads_recursion(maze, coord, color, threads):
     found_fork = False
     possible_moves = []
     while not found_fork:
+        # if another thread has already found the end, STOP
+        if stop:
+            return
         possible_moves = maze.get_possible_moves(x,y)
         # if there is only 1 possible move,
         # check to see if we can move there,
@@ -136,18 +150,24 @@ def solve_using_threads_recursion(maze, coord, color, threads):
 # TODO the function to solve
 def solve_find_end(maze):
     """ finds the end position using threads.  Nothing is returned """
+    # everytime we run this function to solve for a maze,
+    # make sure that stop is False.
+    # it will turn true once a thread founds the end of the maze.
+    global stop
+    stop = False
+    
     start_coord = maze.get_start_pos()
     threads = []
 
     original_thread = threading.Thread(target=solve_using_threads_recursion,args=(maze,start_coord,get_color(),threads))
     threads.append(original_thread)
     original_thread.start()
-    # When one of the threads finds the end position, stop all of them
-    global stop
-    if stop:
-        for thread in threads:
-            thread.join()
+    
+    # join all threads created
+    for thread in threads:
+        thread.join()
 
+    # threads holds all of the thread created
     global thread_count
     thread_count = len(threads)
 
