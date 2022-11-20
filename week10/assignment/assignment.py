@@ -52,8 +52,6 @@ Instructions:
                     print(<variable>, end=', ', flush=True)
 
 Add any comments for me:
-
-
 """
 import random
 from multiprocessing.managers import SharedMemoryManager
@@ -64,7 +62,6 @@ BUFFER_SIZE = 10
 READERS = 2
 WRITERS = 2
 END_MESSAGE = -1
-_items_read = 0
 
 #--------------------------------------------------------------------------------------------------------
 # target functions
