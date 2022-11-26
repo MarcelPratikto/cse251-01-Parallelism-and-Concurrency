@@ -12,14 +12,22 @@ Add your comments here on the pool sizes that you used for your assignment and
 why they were the best choices.
 
 4034 Test Files
-I started with 4:   148.60744420 seconds
-Then went to 8:     146.74165900 seconds
-Then 16:            148.01337980 seconds
-Then 20:            146.04221650 seconds
+I started with 2 for each pools:
+140.30525480 seconds
+Then went to 4 for each pools (using up all 20 logical processors on my laptop):
+135.15316180 seconds
 
-I think they are the best because of the number of cores that I have in my computer.
-I keep incrementing by 4 until I reach max cores.
+I guessed that some tasks take longer than other to complete.
+So I redistributed the amount of cores from the less complex to the more complex.
+    pool_primes = mp.Pool(5)
+    pool_words = mp.Pool(4)
+    pool_upper = mp.Pool(4)
+    pool_sum = mp.Pool(5)
+    pool_url = mp.Pool(2)
+133.23532950 seconds
 
+I think they are the best because I only have 20 cores.
+Redistributing the cores from the simpler tasks to the complex tasks makes it faster.
 """
 
 from datetime import datetime, timedelta
@@ -123,20 +131,22 @@ def task_name(url):
     content = request.json()
     #print(f"content: {content}")
     name = content["name"]
-    print(f"name: {name}")
+    #print(f"name: {name}")
     if request.ok:
         return f"{url} has name {name}"
+    else:
+        return f"{url} had an error receiving the information"
 
 def main():
     log = Log(show_terminal=True)
     log.start_timer()
 
     # TODO Create process pools
-    pool_primes = mp.Pool(1)
-    pool_words = mp.Pool(1)
-    pool_upper = mp.Pool(1)
-    pool_sum = mp.Pool(1)
-    pool_url = mp.Pool(1)
+    pool_primes = mp.Pool(5)
+    pool_words = mp.Pool(4)
+    pool_upper = mp.Pool(4)
+    pool_sum = mp.Pool(5)
+    pool_url = mp.Pool(2)
 
     count = 0
     task_files = glob.glob("*.task")
@@ -149,30 +159,40 @@ def main():
         task_type = task['task']
         if task_type == TYPE_PRIME:
             #task_prime(task['value'])
-            result_primes.append(pool.apply_async(task_prime, args=(task['value'],)).get())            
+            result_primes.append(pool_primes.apply_async(task_prime, args=(task['value'],)).get())            
             #pool.apply_async(result_primes.append, args=(task_prime(task['value']),))
         elif task_type == TYPE_WORD:
             #task_word(task['word'])
-            result_words.append(pool.apply_async(task_word, args=(task['word'],)).get())
+            result_words.append(pool_words.apply_async(task_word, args=(task['word'],)).get())
             #pool.apply_async(result_words.append, args=(task_word(task['word']),))
         elif task_type == TYPE_UPPER:
             #task_upper(task['text'])
-            result_upper.append(pool.apply_async(task_upper, args=(task['text'],)).get())
+            result_upper.append(pool_upper.apply_async(task_upper, args=(task['text'],)).get())
             #pool.apply_async(result_upper.append, args=(task_upper(task['text']),))
         elif task_type == TYPE_SUM:
             #task_sum(task['start'], task['end'])
-            result_sums.append(pool.apply_async(task_sum, args=(task['start'], task['end'])).get())
+            result_sums.append(pool_sum.apply_async(task_sum, args=(task['start'], task['end'])).get())
             #pool.apply_async(result_sums.append, args=(task_sum(task['start'], task['end'])),)
         elif task_type == TYPE_NAME:
             #task_name(task['url'])
-            result_names.append(pool.apply_async(task_name, args=(task['url'],)).get())
+            result_names.append(pool_url.apply_async(task_name, args=(task['url'],)).get())
             #pool.apply_async(result_names.append, args=(task_name(task['url']),))         
         else:
             log.write(f'Error: unknown task type {task_type}')
 
     # TODO start and wait pools
-    pool.close()
-    pool.join()
+    # close() should be called when we're not submitting more work to the Pool instance
+    pool_primes.close()
+    pool_words.close()
+    pool_upper.close()
+    pool_sum.close()
+    pool_url.close()
+    # join() should be called when we want the program to wait for the worker processes to terminate
+    pool_primes.join()
+    pool_words.join()
+    pool_upper.join()
+    pool_sum.join()
+    pool_url.join()
 
     # Do not change the following code (to the end of the main function)
     def log_list(lst, log):

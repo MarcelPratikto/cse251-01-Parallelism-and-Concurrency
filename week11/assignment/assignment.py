@@ -2,6 +2,7 @@
 Course: CSE 251
 Lesson Week: 11
 File: Assignment.py
+Author: Marcel Pratikto
 """
 
 import time
