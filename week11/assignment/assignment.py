@@ -13,9 +13,6 @@ import multiprocessing as mp
 CLEANING_STAFF = 2
 HOTEL_GUESTS = 5
 
-# number of people in the room
-_count = 0
-
 # Run program for this number of seconds
 TIME = 60
 
@@ -76,34 +73,39 @@ def guest(start_time, party_count, id, lock_room, room_count):
     time_end = start_time + TIME
     while time.time() < time_end:
         guest_waiting()
+        # mp.Value has its own lock
+        # make sure we acquire the mp.Value lock each time we read/modify the value
         room_count.acquire()
+        
+        # specific only to the first guest in the room
         if room_count.value == 0:
-            lock_room.acquire()
+            lock_room.acquire()     # if first guest in the room, lock the room
             print(f"{STARTING_PARTY_MESSAGE}")
             party_count.value = party_count.value + 1
             
             room_count.value = room_count.value + 1
-            room_count.release()
-            
-            guest_partying(id)
+            room_count.release()    # make sure that we release the mp.Value lock so that other processes can enter the room
+            guest_partying(id)      # while this process is partying (process is sleeping for an amount of time)
             
             room_count.acquire()
             room_count.value = room_count.value - 1
             if room_count.value == 0:
                 print(f"{STOPPING_PARTY_MESSAGE}")
-                lock_room.release()
-            room_count.release()
+                lock_room.release() # if last guest in the room, unlock the room
+            room_count.release()    # make sure that we release the mp.Value lock so that other processes can enter the room
+        
+        # if not the first guest in the room
         else:
             room_count.value = room_count.value + 1
-            guest_partying(id)
-            room_count.release()
+            room_count.release()    # make sure that we release the mp.Value lock so that other processes can enter the room
+            guest_partying(id)      # while this process is partying (process is sleeping for an amount of time)
             
             room_count.acquire()
             room_count.value = room_count.value - 1
             if room_count.value == 0:
                 print(f"{STOPPING_PARTY_MESSAGE}")
-                lock_room.release()
-            room_count.release()
+                lock_room.release() # if last guest in the room, unlock the room
+            room_count.release()    # make sure that we release the mp.Value lock so that other processes can enter the room
         
 
 
@@ -115,26 +117,31 @@ def main():
     start_time = time.time()
 
     # TODO - add any variables, data structures, processes you need
-    cleaned_count = mp.Value('i', 0)
-    party_count = mp.Value('i', 0)
-    room_count = mp.Value('i', 0)
+    cleaned_count = mp.Value('i', 0)    # keeps track of how many times room was cleaned
+    party_count = mp.Value('i', 0)      # keeps track of how many times room was used for parties
+    room_count = mp.Value('i', 0)       # keeps track of how many people are in the room
     
     lock_room = mp.Lock()
 
-    # create separate processes for cleaners and guests
     # TODO - add any arguments to cleaner() and guest() that you need
+    # create separate processes for cleaners and guests and starts them
     process_cleaners = []
     for id in range(CLEANING_STAFF):
+        # since only one cleaner can clean in the room at a time
+        # it only has to make sure that the room is locked using lock_room
         process = mp.Process(target=cleaner, args=(start_time, cleaned_count, id+1, lock_room))
         process_cleaners.append(process)
         process.start()
 
     process_guests = []
     for id in range(HOTEL_GUESTS):
+        # only guest processes need to worry about how many people are in the room
+        # hence why it has room_count in addition to lock_room
         process = mp.Process(target=guest, args=(start_time, party_count, id+1, lock_room, room_count))
         process_guests.append(process)
         process.start()
 
+    # end the processes
     for process in process_cleaners:
         process.join()
     for process in process_guests:
