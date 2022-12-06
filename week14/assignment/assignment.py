@@ -2,7 +2,7 @@
 Course: CSE 251
 Lesson Week: 14
 File: assignment.py
-Author: <your name>
+Author: Marcel Pratikto
 Purpose: Assignment 14 - Family Search
 """
 import time
@@ -67,10 +67,10 @@ def main():
 
             if part_to_run == 1:
                 run_part(log, start_id, generations, DFS, depth_fs_pedigree)
-            elif part_to_run == 2:
-                run_part(log, start_id, generations, BFS, breadth_fs_pedigree)
-            elif part_to_run == 3:
-                run_part(log, start_id, generations, BFS5, breadth_fs_pedigree_limit5)
+            # elif part_to_run == 2:
+            #     run_part(log, start_id, generations, BFS, breadth_fs_pedigree)
+            # elif part_to_run == 3:
+            #     run_part(log, start_id, generations, BFS5, breadth_fs_pedigree_limit5)
 
 
 if __name__ == '__main__':
