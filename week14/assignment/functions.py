@@ -42,8 +42,7 @@ Describe how to speed up part 2
 
 First I got it working without threads
 3 generations without threads: 20.66656 seconds
-
-
+6 generations without threads: 26.74068
 
 ---------------------------------------------------------------------
 10% Bonus to speed up part 3
